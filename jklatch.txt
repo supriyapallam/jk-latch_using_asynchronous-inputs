@@ -1,0 +1,68 @@
+//Design Code
+module jk_latch(output reg q,output wire qbar,input j,k,clk,pre,clr);
+  reg q1;
+  always@(clk)
+    begin
+      if(clk==1'b1)
+        begin
+          q1=q;
+          case({j,k})
+            2'b00: q1=q;
+            2'b01: q1=1'b0;
+            2'b10: q1=1'b1;
+            2'b11: q1=~q;
+          endcase
+        end
+      else
+        begin
+          q1=q;
+        end
+    end
+  assign q = pre ? 1'b1	: (clr ? 1'b0 : q1);
+  assign qbar=~q;
+endmodule
+
+//Test Bench Code
+module tb();
+  wire q,qbar;
+  reg j,k,clk;
+  reg  pre,clr;
+  jk_latch DUT(q,qbar,j,k,clk,pre,clr);
+  integer i;
+  initial
+    begin
+      clk=1'b0;
+      forever #5 clk=~clk;
+    end
+  
+  
+  initial
+    begin
+      pre = 1'b1;
+      #20;
+      pre = 1'b0; // For normal FF operaiton Preset and Clear have to be made 0
+      clr = 1'b0;
+      #10;
+      clr = 1'b1;
+      for(i=0;i<4;i=i+1)
+        begin
+          {j,k}=i;
+          #10;
+        end
+      #10 $finish;
+    end
+  
+  initial
+    begin
+      $timeformat(-9,0,"ns",10);
+      $monitor("time=%0t,clk=%0b,j=%0b,k=%0b,q=%0b,qbar=%0b,pre=%0b,clr=%0b",$time,clk,j,k,q,qbar,pre,clr);
+    end
+  
+  initial
+    begin
+      $dumpfile("test.vcd");
+      $dumpvars(1);
+    end
+  
+endmodule
+
